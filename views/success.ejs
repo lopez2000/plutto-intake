@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Provider Validation Success</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="/images/plutto-icon.png" type="image/png">
+
+  <!-- Google Fonts (Nunito Sans) -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" rel="stylesheet">
+  
+  <!-- Custom CSS (optionally the same file used in form.ejs) -->
+  <link rel="stylesheet" href="/css/form-style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Optional Plutto Logo -->
+    <img src="/images/plutto-logo.png" alt="Plutto Logo" class="plutto-logo">
+
+    <h2 class="header-text">
+      <i class="fas fa-check-circle text-success"></i> Validation Request Submitted!
+    </h2>
+
+    <div class="mb-3" style="margin-top: 20px;">
+      <p style="font-size: 1.1rem;">
+        <strong>Good news!</strong> Your validation request has been submitted successfully.
+        We’ll notify you (and our team) once the validation is ready.
+      </p>
+    </div>
+    <!-- Example: If you want to show the TIN or provider name, you can pass it from your server -->
+    <% if (providerName) { %>
+      <p class="mb-3">Provider Name: <strong><%= providerName %></strong></p>
+    <% } %>
+    <% if (providerTin) { %>
+      <p class="mb-3">TIN: <strong><%= providerTin %></strong></p>
+    <% } %>
+    
+    <!-- Button to go back or do something else -->
+    <a href="/" class="btn btn-primary w-100">
+      <i class="fas fa-arrow-left"></i> Back to Home
+    </a>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
