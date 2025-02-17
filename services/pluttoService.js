@@ -3,9 +3,10 @@ const axios = require('axios');
 
 /**
  * createEntityValidation
- * Calls Plutto's /entity_validations endpoint with the user data
+ * Calls Plutto's /entity_validations endpoint with the user data.
+ * We only pass TIN, name, and an optional email, plus the required "template_id."
  */
-exports.createEntityValidation = (tin, name, email, details) => {
+exports.createEntityValidation = (tin, name, email) => {
   const payload = {
     entity_validation: {
       tin,
@@ -13,9 +14,12 @@ exports.createEntityValidation = (tin, name, email, details) => {
       country: 'CL',
       status: 'approved',
       webhook_url: `${process.env.APP_BASE_URL}/plutto-webhook`,
+
       contact_email: email || null,
+
       information_request: {
-        description: details || null
+        template_id: process.env.PLUTTO_TEMPLATE_ID || 'irt_SOME_TEMPLATE_ID',
+        recipient_email: email || null
       }
     }
   };

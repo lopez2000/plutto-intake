@@ -2,14 +2,14 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const routes = require('./routes'); // Our routes folder's index.js
+const routes = require('./routes');
 
 const app = express();
 
-// Serve static files
+// Serve static files (CSS, images) from "public" folder
 app.use(express.static('public'));
 
-// Middleware for parsing forms & JSON
+// Middleware for form & JSON parsing
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
@@ -17,7 +17,7 @@ app.use(express.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Mount our routes
+// Mount routes
 app.use('/', routes);
 
 // Start the server

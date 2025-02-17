@@ -1,7 +1,6 @@
 // services/emailService.js
 const nodemailer = require('nodemailer');
 
-// Reuse a single transporter
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
@@ -12,16 +11,13 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-/**
- * sendEmail - generic function if needed
- */
-async function sendEmail(mailOptions) {
-  return transporter.sendMail(mailOptions);
+async function sendEmail(options) {
+  return transporter.sendMail(options);
 }
 
 /**
  * sendCollaboratorEmail - email to external collaborator
- * isFinal: boolean (if the validation is complete)
+ * isFinal = false by default (request received), true = validation is complete
  */
 exports.sendCollaboratorEmail = async ({ to, providerName, providerTin, validationId, isFinal = false }) => {
   const subject = isFinal
@@ -39,7 +35,7 @@ Thanks for using our service.
     : `Hello,
 
 We have received your request to validate the supplier "${providerName}" (TIN: ${providerTin}).
-The validation process has started, and you'll receive another email once it's complete.
+You'll receive another email once it's complete.
 
 Reference ID: ${validationId}
 `;
@@ -54,23 +50,28 @@ Reference ID: ${validationId}
 
 /**
  * sendInternalEmail - email to internal team
- * You can pass additional fields if needed
  */
-exports.sendInternalEmail = async ({ providerName, providerTin, providerEmail, providerDetails, validationId, pluttoResponse, webhookType, finalStatus }) => {
+exports.sendInternalEmail = async ({
+  providerName,
+  providerTin,
+  providerEmail,
+  validationId,
+  pluttoResponse,
+  webhookType,
+  finalStatus
+}) => {
   let subject = 'New Supplier Validation Created';
-  let text = `A new entity validation has been created.
-
+  let text = `
 TIN: ${providerTin}
 Name: ${providerName}
 Email: ${providerEmail || 'N/A'}
-Details: ${providerDetails || 'N/A'}
 Validation ID: ${validationId}
 `;
 
-  // If it's triggered by a webhook final step
+  // If triggered by webhook
   if (webhookType) {
     subject = `Supplier Validation Ready (${webhookType})`;
-    text = `Plutto validation is now ready.
+    text = `Validation is now ready.
 
 Validation ID: ${validationId}
 Entity Name: ${providerName}
@@ -80,7 +81,7 @@ Type: ${webhookType}
 `;
   }
 
-  // If we have a Plutto response, add it as needed
+  // If we have a response from Plutto, include it
   if (pluttoResponse) {
     text += `\nPlutto response:\n${JSON.stringify(pluttoResponse, null, 2)}`;
   }
