@@ -1,0 +1,85 @@
+/* form-style.css */
+
+/* Overall body styling */
+body {
+    background-color: #00072D; /* Approx. dark navy from getplutto.com */
+    font-family: 'Nunito Sans', sans-serif;
+    color: #ffffff; /* White text */
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* The container for the white form */
+  .container {
+    max-width: 600px;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    background-color: #ffffff; /* White background for the form */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    color: #000; /* Dark text inside the form */
+  }
+  
+  /* Plutto logo styling */
+  .plutto-logo {
+    display: block;
+    margin: 0 auto 20px auto;
+    width: 120px; 
+    height: auto; /* Maintains aspect ratio */
+  }
+  
+  /* Header text styling */
+  .header-text {
+    color: #00072D; /* Tie the heading color to the brand color, or use black #000 */
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Labels & button styling */
+  .form-label {
+    font-weight: 600; /* Slightly bolder text */
+  }
+  .btn-primary {
+    background-color: #00072D; /* Match brand color for a dark button */
+    border-color: #00072D;
+  }
+  
+  /* Optional: Custom invalid styling with Bootstrap */
+  .was-validated .form-control:invalid {
+    border-color: #dc3545;
+  }
+  .was-validated .form-control:invalid:focus {
+    box-shadow: 0 0 0 0.25rem rgba(220,53,69,.25);
+  }
+  .invalid-feedback {
+    display: none;
+    color: #dc3545;
+  }
+  .was-validated .form-control:invalid ~ .invalid-feedback {
+    display: block;
+  }
+  
+  /* Make placeholder text more transparent and italic */
+  .form-control::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+    font-style: italic;
+  }
+  
+  /* Support older browsers with vendor-specific selectors */
+  .form-control:-ms-input-placeholder {
+    color: rgba(0, 0, 0, 0.5);
+    font-style: italic;
+  }
+  .form-control::-ms-input-placeholder {
+    color: rgba(0, 0, 0, 0.5);
+    font-style: italic;
+  }
+  .form-control:-moz-placeholder {
+    color: rgba(0, 0, 0, 0.5);
+    font-style: italic;
+  }
+  .form-control::-moz-placeholder {
+    color: rgba(0, 0, 0, 0.5);
+    font-style: italic;
+  }
