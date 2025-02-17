@@ -14,7 +14,7 @@ app.use(express.static('public'));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-// Set EJS as view engine, pointing to the 'views' folder
+// Set EJS as the view engine, pointing to the 'views' folder
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -66,8 +66,7 @@ app.post('/submit', async (req, res) => {
         webhook_url: `${process.env.APP_BASE_URL}/plutto-webhook`,
         contact_email: providerEmail || null, // top-level email
 
-        // Optional: if you want to store any additional details
-        // (some prefer putting them in 'information_request')
+        // Optional: store additional details in 'information_request'
         information_request: {
           description: providerDetails || null
         }
@@ -126,12 +125,68 @@ ${JSON.stringify(response.data, null, 2)}
 
     // 6. Respond to the user (in the browser)
     res.send(`
-      Your validation request has been submitted successfully. 
+      Your validation request has been submitted successfully.
       We'll notify you (and our team) once the validation is ready.
     `);
+
   } catch (error) {
-    console.error('Error creating validation:', error.response ? error.response.data : error.message);
-    res.status(500).send('An error occurred while creating the validation.');
+    // Enhanced error handling
+    console.error('Error creating validation:');
+
+    if (error.response) {
+      const status = error.response.status;
+      const pluttoError = error.response.data; // Detailed error obj from Plutto
+      console.error('Status:', status);
+      console.error('Plutto Error:', JSON.stringify(pluttoError, null, 2));
+
+      switch (status) {
+        case 400: // "bad_request"
+          return res.status(400).send(`
+            The request was invalid or missing required fields.
+            Please check your TIN format or other parameters.
+          `);
+
+        case 401: // "unauthorized"
+          return res.status(401).send(`
+            Invalid or missing API key. Please update your Plutto API credentials.
+          `);
+
+        case 404: // "resource_not_found"
+          return res.status(404).send(`
+            We couldn't find the requested resource in Plutto.
+            Possibly an unknown TIN or the item doesn't exist.
+          `);
+
+        case 422: // "unprocessable_entity"
+          return res.status(422).send(`
+            Plutto couldn't process this TIN or data. Please verify your information.
+          `);
+
+        case 500: // "internal_server_error"
+          return res.status(500).send(`
+            Something went wrong on Plutto's side. Please try again later.
+          `);
+
+        case 503: // "service_unavailable"
+          return res.status(503).send(`
+            Plutto service is temporarily unavailable. Please try again later.
+          `);
+
+        default:
+          // Any other 4xx/5xx not explicitly handled
+          return res.status(status).send(`
+            An error occurred (${status}).
+            Please check your data or try again later.
+          `);
+      }
+    } else {
+      // No response (e.g., network error, DNS issue, etc.)
+      console.error('Unexpected Error:', error.message);
+      return res.status(500).send(`
+        An unexpected error occurred while contacting Plutto.
+        Please try again later or contact support.
+      `);
+    }
   }
 });
 
@@ -141,20 +196,6 @@ ${JSON.stringify(response.data, null, 2)}
  */
 app.post('/plutto-webhook', async (req, res) => {
   try {
-    // The payload structure from your doc:
-    // {
-    //   "type": "validation.ready",
-    //   "validation": {
-    //       "id": "...",
-    //       "entity_validation_id": "...",
-    //       "entity_name": "...",
-    //       "entity_tin": "...",
-    //       "contact_email": "...",
-    //       ...
-    //       "status": "created",
-    //       ...
-    //   }
-    // }
     const { type, validation } = req.body;
     if (!validation) {
       console.error("No 'validation' object found in webhook payload:", req.body);
