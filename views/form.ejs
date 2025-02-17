@@ -32,9 +32,17 @@
 
     <!-- Error Banner if any (from server-side) -->
     <% if (typeof errorMsg !== 'undefined' && errorMsg) { %>
-      <div class="alert alert-danger" role="alert">
-        <%= errorMsg %>
-      </div>
+      <!-- Si el errorMsg coincide con "TIN already in use", mostramos un mensaje específico -->
+      <% if (errorMsg === 'TIN already in use') { %>
+        <div class="alert alert-danger" role="alert">
+          <i class="fas fa-exclamation-triangle"></i> TIN already in use. Please try another TIN.
+        </div>
+      <% } else { %>
+        <!-- En caso contrario, mostramos el error genérico -->
+        <div class="alert alert-danger" role="alert">
+          <%= errorMsg %>
+        </div>
+      <% } %>
     <% } %>
 
     <form action="/submit" method="POST" id="providerForm" novalidate>

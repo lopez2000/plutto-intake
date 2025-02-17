@@ -2,10 +2,6 @@
 const { createEntityValidation } = require('../services/pluttoService');
 const { sendCollaboratorEmail, sendInternalEmail } = require('../services/emailService');
 
-/**
- * submitValidation - Handles form submission, calls Plutto's API,
- * and either shows success.ejs or re-renders form.ejs with an error banner.
- */
 exports.submitValidation = async (req, res) => {
   const {
     accessKey,
@@ -14,7 +10,7 @@ exports.submitValidation = async (req, res) => {
     providerEmail
   } = req.body;
 
-  // 1. Validate the access key
+  // 1. Validar clave de acceso
   if (accessKey !== process.env.ACCESS_KEY) {
     return res.status(403).render('form', {
       errorMsg: 'Invalid access key.',
@@ -25,12 +21,12 @@ exports.submitValidation = async (req, res) => {
   }
 
   try {
-    // 2. Create the entity validation via Plutto
+    // 2. Crear validación en Plutto
     const response = await createEntityValidation(providerTin, providerName, providerEmail);
     const validationId = response.data.id || null;
     console.log('Created Entity Validation with ID:', validationId);
 
-    // 3. Send an email to the collaborator (if provided)
+    // 3. Enviar email al colaborador (si ingresó email)
     if (providerEmail) {
       await sendCollaboratorEmail({
         to: providerEmail,
@@ -40,7 +36,7 @@ exports.submitValidation = async (req, res) => {
       });
     }
 
-    // 4. Send an internal notification email
+    // 4. Enviar email interno
     await sendInternalEmail({
       providerName,
       providerTin,
@@ -49,60 +45,46 @@ exports.submitValidation = async (req, res) => {
       pluttoResponse: response.data
     });
 
-    // 5. Render success view
+    // 5. Mostrar vista de éxito
     return res.render('success', { providerName, providerTin });
 
   } catch (error) {
     console.error('Error creating validation:');
+
     if (error.response) {
       const status = error.response.status;
       const pluttoError = error.response.data;
-      console.error('Status:', status, 'Plutto Error:', pluttoError);
+      console.error('Status:', status, 'Plutto Error:', JSON.stringify(pluttoError, null, 2));
 
-      // Re-render the form with a relevant error message
       switch (status) {
-        case 400:
-          return res.status(400).render('form', {
-            errorMsg: 'Invalid or missing fields. Check your TIN format.',
-            providerTin,
-            providerName,
-            providerEmail
-          });
-        case 401:
-          return res.status(401).render('form', {
-            errorMsg: 'Invalid or missing API key. Check your Plutto credentials.',
-            providerTin,
-            providerName,
-            providerEmail
-          });
-        case 404:
-          return res.status(404).render('form', {
-            errorMsg: 'Resource/TIN not found. Verify your TIN.',
-            providerTin,
-            providerName,
-            providerEmail
-          });
-        case 422:
+        // --------------------------------------
+        // EJEMPLO DE OTROS CÓDIGOS (400, 401, ETC.)
+        // --------------------------------------
+
+        case 422: {
+          // Mensaje genérico en caso de 422
+          let finalMessage = 'Plutto could not process this TIN. Please verify your info.';
+
+          // Si Plutto dice específicamente "Tin ya está en uso", mostramos "TIN already in use"
+          if (
+            pluttoError.error &&
+            pluttoError.error.detail === 'Tin ya está en uso'
+          ) {
+            finalMessage = 'TIN already in use';
+          }
+
           return res.status(422).render('form', {
-            errorMsg: 'Plutto could not process this TIN. Please verify your info.',
+            errorMsg: finalMessage,
             providerTin,
             providerName,
             providerEmail
           });
-        case 500:
-          return res.status(500).render('form', {
-            errorMsg: 'Server error at Plutto. Please try again later.',
-            providerTin,
-            providerName,
-            providerEmail
-          });
-        case 503:
-          return res.status(503).render('form', {
-            errorMsg: 'Plutto is temporarily unavailable. Please try again later.',
-            providerTin,
-            providerName,
-            providerEmail
-          });
+        }
+
+        // --------------------------------------
+        // EJEMPLO DE OTROS CÓDIGOS (500, 503, ETC.)
+        // --------------------------------------
+
         default:
           return res.status(status).render('form', {
             errorMsg: `An error occurred (${status}). Please try again.`,
@@ -112,10 +94,10 @@ exports.submitValidation = async (req, res) => {
           });
       }
     } else {
-      // No response (network error, etc.)
+      // Si no hay error.response (error de red, etc.)
       console.error('Unexpected Error:', error.message);
       return res.status(500).render('form', {
-        errorMsg: 'Unexpected network error. Please try again or contact support.',
+        errorMsg: 'Unexpected network error. Please try again.',
         providerTin,
         providerName,
         providerEmail
@@ -124,9 +106,7 @@ exports.submitValidation = async (req, res) => {
   }
 };
 
-/**
- * handleWebhook - Receives Plutto's validation webhooks (validation.ready, etc.)
- */
+// WEBHOOK: sin cambios principales, salvo que ya lo tengas implementado
 exports.handleWebhook = async (req, res) => {
   try {
     const { type, validation } = req.body;
@@ -145,9 +125,7 @@ exports.handleWebhook = async (req, res) => {
 
     console.log(`Webhook received: type=${type}, validationID=${id}, status=${status}`);
 
-    // If validation is ready, send follow-up emails
     if (type === 'validation.ready' || type === 'validation.ready_without_legal_cases') {
-      // Possibly send an email to the collaborator
       if (contact_email) {
         await sendCollaboratorEmail({
           to: contact_email,
@@ -157,7 +135,6 @@ exports.handleWebhook = async (req, res) => {
           isFinal: true
         });
       }
-      // Send internal email
       await sendInternalEmail({
         providerName: entity_name,
         providerTin: entity_tin,
@@ -167,7 +144,6 @@ exports.handleWebhook = async (req, res) => {
       });
     }
 
-    // Respond with 200 OK so Plutto stops retrying
     res.status(200).send('OK');
   } catch (err) {
     console.error('Error handling webhook:', err);
